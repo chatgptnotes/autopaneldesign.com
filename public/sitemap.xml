@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+  <!-- Homepage -->
+  <url>
+    <loc>https://www.autopaneldesign.com/</loc>
+    <lastmod>2025-12-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- AI Circuit Designer (Chatbot) -->
+  <url>
+    <loc>https://www.autopaneldesign.com/#chatbot</loc>
+    <lastmod>2025-12-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- AI Prompt Generator -->
+  <url>
+    <loc>https://www.autopaneldesign.com/#ai-generator</loc>
+    <lastmod>2025-12-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Circuit Diagrams -->
+  <url>
+    <loc>https://www.autopaneldesign.com/#circuit-diagram</loc>
+    <lastmod>2025-12-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- 2D Schematic Editor -->
+  <url>
+    <loc>https://www.autopaneldesign.com/#schematic-2d</loc>
+    <lastmod>2025-12-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- 3D Panel Viewer -->
+  <url>
+    <loc>https://www.autopaneldesign.com/#panel-3d</loc>
+    <lastmod>2025-12-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Digital Twin Sync -->
+  <url>
+    <loc>https://www.autopaneldesign.com/#digital-twin</loc>
+    <lastmod>2025-12-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Component Library -->
+  <url>
+    <loc>https://www.autopaneldesign.com/#component-library</loc>
+    <lastmod>2025-12-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- PDF Export -->
+  <url>
+    <loc>https://www.autopaneldesign.com/#pdf-export</loc>
+    <lastmod>2025-12-25</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- GitHub Repository -->
+  <url>
+    <loc>https://github.com/chatgptnotes/autopaneldesign.com</loc>
+    <lastmod>2025-12-25</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+</urlset>
