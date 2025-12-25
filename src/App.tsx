@@ -1,0 +1,81 @@
+/**
+ * Main App Component: Split-screen interface
+ * Left: Schematic Canvas (Logic/2D)
+ * Right: 3D Panel Viewer (Physical/3D)
+ */
+
+import React from 'react';
+import SchematicCanvas from './components/SchematicCanvas';
+import Panel3DViewer from './components/Panel3DViewer';
+import { useInitializeApp } from './hooks/useInitializeApp';
+
+const App: React.FC = () => {
+  useInitializeApp();
+  return (
+    <div className="w-screen h-screen flex flex-col bg-gray-100">
+      {/* Header */}
+      <header className="bg-gray-800 text-white px-6 py-4 shadow-lg">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">Electrical Panel Designer</h1>
+            <p className="text-sm text-gray-300">AI-Powered ECAD Tool - MVP</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors">
+              Save Project
+            </button>
+            <button className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors">
+              Export BOM
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Split View */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Panel: Schematic View */}
+        <div className="w-1/2 border-r border-gray-300 bg-white">
+          <div className="h-full flex flex-col">
+            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+              <h2 className="text-sm font-semibold text-gray-700">Schematic View (Logic)</h2>
+              <p className="text-xs text-gray-500">Drag components and create connections</p>
+            </div>
+            <div className="flex-1">
+              <SchematicCanvas />
+            </div>
+          </div>
+        </div>
+
+        {/* Right Panel: 3D View */}
+        <div className="w-1/2 bg-gray-900">
+          <div className="h-full flex flex-col">
+            <div className="bg-gray-800 px-4 py-2 border-b border-gray-700">
+              <h2 className="text-sm font-semibold text-white">3D Panel View (Physical)</h2>
+              <p className="text-xs text-gray-400">Place components on DIN rails</p>
+            </div>
+            <div className="flex-1">
+              <Panel3DViewer />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-gray-400 px-6 py-2 text-xs border-t border-gray-700">
+        <div className="flex justify-between items-center">
+          <div>
+            <span className="text-gray-500">autopaneldesign.com</span> | Version 1.0 | Last updated: {new Date().toLocaleDateString()}
+          </div>
+          <div className="flex gap-4">
+            <a href="https://github.com/chatgptnotes/autopaneldesign.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+              GitHub
+            </a>
+            <span>Powered by React Three Fiber & React Flow</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default App;
