@@ -132,7 +132,7 @@ function aStar(
   grid: GridNode[][][],
   start: { x: number; y: number; z: number },
   end: { x: number; y: number; z: number },
-  resolution: number
+  _resolution: number
 ): GridNode[] {
   const openSet: GridNode[] = [];
   const closedSet = new Set<string>();
