@@ -6,6 +6,7 @@
 import React, { useState } from 'react';
 import { AICircuitGenerator, CircuitGenerationResult } from '../ai/CircuitGenerator';
 import { useStore } from '../store';
+import ExportPDFButton from './ExportPDFButton';
 
 const AIPromptPanel: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -246,6 +247,12 @@ const AIPromptPanel: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* PDF Export Section */}
+      <div className="mt-6 border-t border-gray-200 pt-6">
+        <h4 className="text-sm font-semibold text-gray-700 mb-4">Export Professional Documentation:</h4>
+        <ExportPDFButton />
+      </div>
 
       {/* Help Section */}
       <div className="mt-6 border-t border-gray-200 pt-6">

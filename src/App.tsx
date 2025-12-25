@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import SchematicCanvas from './components/SchematicCanvas';
 import Panel3DViewer from './components/Panel3DViewer';
 import AIPromptPanel from './components/AIPromptPanel';
+import ExportPDFButton from './components/ExportPDFButton';
 import LandingPage from './pages/LandingPage';
 import { useInitializeApp } from './hooks/useInitializeApp';
 
@@ -37,12 +38,7 @@ const App: React.FC = () => {
             >
               {viewMode === 'design' ? 'AI Generate' : 'Back to Design'}
             </button>
-            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors">
-              Save Project
-            </button>
-            <button className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors">
-              Export BOM
-            </button>
+            <ExportPDFButton compact />
           </div>
         </div>
       </header>
