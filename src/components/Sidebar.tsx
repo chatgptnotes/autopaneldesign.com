@@ -15,6 +15,7 @@ import {
   Home,
   BookOpen,
   ChevronRight,
+  Network,
 } from 'lucide-react';
 
 // ============================================================================
@@ -25,6 +26,7 @@ export type FeatureId =
   | 'landing'
   | 'chatbot'
   | 'ai-generator'
+  | 'circuit-diagram'
   | 'schematic-2d'
   | 'panel-3d'
   | 'digital-twin'
@@ -70,6 +72,13 @@ const FEATURES: SidebarFeature[] = [
     name: 'AI Prompt Generator',
     icon: <Zap className="w-5 h-5" />,
     description: 'Natural language to circuits',
+    aiPowered: true,
+  },
+  {
+    id: 'circuit-diagram',
+    name: 'Circuit Diagrams',
+    icon: <Network className="w-5 h-5" />,
+    description: 'Professional electrical diagrams',
     aiPowered: true,
   },
   {

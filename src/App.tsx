@@ -10,6 +10,7 @@ import AIPromptPanel from './components/AIPromptPanel';
 import ChatbotInterface from './components/ChatbotInterface';
 import ExportPDFButton from './components/ExportPDFButton';
 import LandingPage from './pages/LandingPage';
+import CircuitDiagramPage from './pages/CircuitDiagramPage';
 import Sidebar, { FeatureId } from './components/Sidebar';
 import { useInitializeApp } from './hooks/useInitializeApp';
 
@@ -86,6 +87,7 @@ function getFeatureTitle(feature: FeatureId): string {
     landing: 'Welcome',
     chatbot: 'AI Circuit Designer',
     'ai-generator': 'AI Prompt Generator',
+    'circuit-diagram': 'Professional Circuit Diagrams',
     'schematic-2d': '2D Schematic Editor',
     'panel-3d': '3D Panel Viewer',
     'digital-twin': 'Digital Twin Sync',
@@ -101,6 +103,7 @@ function getFeatureDescription(feature: FeatureId): string {
     landing: 'AI-Powered Electrical Panel Design',
     chatbot: 'Design circuits through conversational AI',
     'ai-generator': 'Generate circuits from natural language',
+    'circuit-diagram': 'Industry-standard electrical diagrams with proper symbols',
     'schematic-2d': 'Visual circuit diagram editor',
     'panel-3d': 'Interactive 3D panel layout',
     'digital-twin': 'Real-time 2D/3D synchronization',
@@ -122,6 +125,9 @@ function renderFeatureContent(feature: FeatureId): React.ReactNode {
           <AIPromptPanel />
         </div>
       );
+
+    case 'circuit-diagram':
+      return <CircuitDiagramPage />;
 
     case 'schematic-2d':
       return (
