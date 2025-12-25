@@ -3,7 +3,7 @@
  * Handles the physical component placement, DIN rail snapping, and wire visualization
  */
 
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid, Html, PerspectiveCamera } from '@react-three/drei';
 import * as THREE from 'three';

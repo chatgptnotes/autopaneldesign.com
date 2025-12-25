@@ -178,7 +178,7 @@ export class CircuitValidator {
    */
   private static validatePowerDistribution(
     components: ComponentInstance[],
-    connections: LogicalConnection[],
+    _connections: LogicalConnection[],
     componentLibrary: ComponentDefinition[]
   ): ValidationWarning[] {
     const warnings: ValidationWarning[] = [];

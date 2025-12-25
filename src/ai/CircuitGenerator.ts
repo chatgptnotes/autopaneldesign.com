@@ -3,7 +3,7 @@
  * Uses pattern matching and electrical engineering rules to generate circuits
  */
 
-import { ComponentType, PinType, WireType } from '../types';
+import { ComponentType, WireType } from '../types';
 
 // ============================================================================
 // CIRCUIT PATTERNS & TEMPLATES
@@ -58,10 +58,10 @@ export const CIRCUIT_PATTERNS: CircuitPattern[] = [
         { id: 'stop_button', type: ComponentType.SENSOR, label: 'Stop Button', position: { x: 300, y: 300 } },
       ],
       connections: [
-        { from: { componentId: 'mcb', pin: 'OUT' }, to: { componentId: 'contactor', pin: 'L1' }, wireType: 'POWER', label: 'L1' },
-        { from: { componentId: 'contactor', pin: 'T1' }, to: { componentId: 'overload', pin: 'IN' }, wireType: 'POWER', label: 'Motor L1' },
-        { from: { componentId: 'start_button', pin: 'OUT' }, to: { componentId: 'contactor', pin: 'A1' }, wireType: 'SIGNAL', label: 'Start' },
-        { from: { componentId: 'stop_button', pin: 'OUT' }, to: { componentId: 'contactor', pin: 'A2' }, wireType: 'SIGNAL', label: 'Stop' },
+        { from: { componentId: 'mcb', pin: 'OUT' }, to: { componentId: 'contactor', pin: 'L1' }, wireType: WireType.POWER, label: 'L1' },
+        { from: { componentId: 'contactor', pin: 'T1' }, to: { componentId: 'overload', pin: 'IN' }, wireType: WireType.POWER, label: 'Motor L1' },
+        { from: { componentId: 'start_button', pin: 'OUT' }, to: { componentId: 'contactor', pin: 'A1' }, wireType: WireType.SIGNAL, label: 'Start' },
+        { from: { componentId: 'stop_button', pin: 'OUT' }, to: { componentId: 'contactor', pin: 'A2' }, wireType: WireType.SIGNAL, label: 'Stop' },
       ],
     },
   },
@@ -79,8 +79,8 @@ export const CIRCUIT_PATTERNS: CircuitPattern[] = [
         { id: 'switch', type: ComponentType.SENSOR, label: 'Light Switch', position: { x: 100, y: 300 } },
       ],
       connections: [
-        { from: { componentId: 'mcb', pin: 'OUT' }, to: { componentId: 'relay', pin: '11' }, wireType: 'POWER', label: 'L' },
-        { from: { componentId: 'switch', pin: 'OUT' }, to: { componentId: 'relay', pin: 'A1' }, wireType: 'SIGNAL', label: 'Control' },
+        { from: { componentId: 'mcb', pin: 'OUT' }, to: { componentId: 'relay', pin: '11' }, wireType: WireType.POWER, label: 'L' },
+        { from: { componentId: 'switch', pin: 'OUT' }, to: { componentId: 'relay', pin: 'A1' }, wireType: WireType.SIGNAL, label: 'Control' },
       ],
     },
   },
@@ -99,10 +99,10 @@ export const CIRCUIT_PATTERNS: CircuitPattern[] = [
         { id: 'output_relay', type: ComponentType.RELAY, label: 'Output Relay', position: { x: 700, y: 100 } },
       ],
       connections: [
-        { from: { componentId: 'psu', pin: 'PLUS' }, to: { componentId: 'plc', pin: '24V' }, wireType: 'POWER', label: '24V' },
-        { from: { componentId: 'psu', pin: 'MINUS' }, to: { componentId: 'plc', pin: 'GND' }, wireType: 'GROUND', label: '0V' },
-        { from: { componentId: 'input_sensor', pin: 'OUT' }, to: { componentId: 'plc', pin: 'DI0' }, wireType: 'SIGNAL', label: 'DI0' },
-        { from: { componentId: 'plc', pin: 'DO0' }, to: { componentId: 'output_relay', pin: 'A1' }, wireType: 'SIGNAL', label: 'DO0' },
+        { from: { componentId: 'psu', pin: 'PLUS' }, to: { componentId: 'plc', pin: '24V' }, wireType: WireType.POWER, label: '24V' },
+        { from: { componentId: 'psu', pin: 'MINUS' }, to: { componentId: 'plc', pin: 'GND' }, wireType: WireType.GROUND, label: '0V' },
+        { from: { componentId: 'input_sensor', pin: 'OUT' }, to: { componentId: 'plc', pin: 'DI0' }, wireType: WireType.SIGNAL, label: 'DI0' },
+        { from: { componentId: 'plc', pin: 'DO0' }, to: { componentId: 'output_relay', pin: 'A1' }, wireType: WireType.SIGNAL, label: 'DO0' },
       ],
     },
   },
@@ -121,9 +121,9 @@ export const CIRCUIT_PATTERNS: CircuitPattern[] = [
         { id: 'mcb3', type: ComponentType.MCB, label: 'Circuit 3', position: { x: 700, y: 100 } },
       ],
       connections: [
-        { from: { componentId: 'main_mcb', pin: 'OUT' }, to: { componentId: 'mcb1', pin: 'L1' }, wireType: 'POWER', label: 'L1' },
-        { from: { componentId: 'main_mcb', pin: 'OUT' }, to: { componentId: 'mcb2', pin: 'L1' }, wireType: 'POWER', label: 'L1' },
-        { from: { componentId: 'main_mcb', pin: 'OUT' }, to: { componentId: 'mcb3', pin: 'L1' }, wireType: 'POWER', label: 'L1' },
+        { from: { componentId: 'main_mcb', pin: 'OUT' }, to: { componentId: 'mcb1', pin: 'L1' }, wireType: WireType.POWER, label: 'L1' },
+        { from: { componentId: 'main_mcb', pin: 'OUT' }, to: { componentId: 'mcb2', pin: 'L1' }, wireType: WireType.POWER, label: 'L1' },
+        { from: { componentId: 'main_mcb', pin: 'OUT' }, to: { componentId: 'mcb3', pin: 'L1' }, wireType: WireType.POWER, label: 'L1' },
       ],
     },
   },
@@ -143,10 +143,10 @@ export const CIRCUIT_PATTERNS: CircuitPattern[] = [
         { id: 'heater_relay', type: ComponentType.RELAY, label: 'Heater Relay', position: { x: 700, y: 300 } },
       ],
       connections: [
-        { from: { componentId: 'psu', pin: 'PLUS' }, to: { componentId: 'plc', pin: '24V' }, wireType: 'POWER', label: '24V' },
-        { from: { componentId: 'temp_sensor', pin: 'OUT' }, to: { componentId: 'plc', pin: 'DI0' }, wireType: 'SIGNAL', label: 'Temp' },
-        { from: { componentId: 'plc', pin: 'DO0' }, to: { componentId: 'fan_contactor', pin: 'A1' }, wireType: 'SIGNAL', label: 'Fan' },
-        { from: { componentId: 'plc', pin: 'DO1' }, to: { componentId: 'heater_relay', pin: 'A1' }, wireType: 'SIGNAL', label: 'Heat' },
+        { from: { componentId: 'psu', pin: 'PLUS' }, to: { componentId: 'plc', pin: '24V' }, wireType: WireType.POWER, label: '24V' },
+        { from: { componentId: 'temp_sensor', pin: 'OUT' }, to: { componentId: 'plc', pin: 'DI0' }, wireType: WireType.SIGNAL, label: 'Temp' },
+        { from: { componentId: 'plc', pin: 'DO0' }, to: { componentId: 'fan_contactor', pin: 'A1' }, wireType: WireType.SIGNAL, label: 'Fan' },
+        { from: { componentId: 'plc', pin: 'DO1' }, to: { componentId: 'heater_relay', pin: 'A1' }, wireType: WireType.SIGNAL, label: 'Heat' },
       ],
     },
   },
@@ -166,10 +166,10 @@ export const CIRCUIT_PATTERNS: CircuitPattern[] = [
         { id: 'level_low', type: ComponentType.SENSOR, label: 'Level Low', position: { x: 300, y: 300 } },
       ],
       connections: [
-        { from: { componentId: 'main_mcb', pin: 'OUT' }, to: { componentId: 'pump_contactor', pin: 'L1' }, wireType: 'POWER', label: 'L1' },
-        { from: { componentId: 'level_low', pin: 'OUT' }, to: { componentId: 'pump_contactor', pin: 'A1' }, wireType: 'SIGNAL', label: 'Start' },
-        { from: { componentId: 'level_high', pin: 'OUT' }, to: { componentId: 'pump_contactor', pin: 'A2' }, wireType: 'SIGNAL', label: 'Stop' },
-        { from: { componentId: 'pump_contactor', pin: 'T1' }, to: { componentId: 'overload', pin: 'IN' }, wireType: 'POWER', label: 'Motor' },
+        { from: { componentId: 'main_mcb', pin: 'OUT' }, to: { componentId: 'pump_contactor', pin: 'L1' }, wireType: WireType.POWER, label: 'L1' },
+        { from: { componentId: 'level_low', pin: 'OUT' }, to: { componentId: 'pump_contactor', pin: 'A1' }, wireType: WireType.SIGNAL, label: 'Start' },
+        { from: { componentId: 'level_high', pin: 'OUT' }, to: { componentId: 'pump_contactor', pin: 'A2' }, wireType: WireType.SIGNAL, label: 'Stop' },
+        { from: { componentId: 'pump_contactor', pin: 'T1' }, to: { componentId: 'overload', pin: 'IN' }, wireType: WireType.POWER, label: 'Motor' },
       ],
     },
   },
@@ -253,7 +253,6 @@ export class AICircuitGenerator {
    */
   private static scorePattern(description: string, pattern: CircuitPattern, requirements: CircuitRequirements): number {
     let score = 0;
-    const words = description.split(/\s+/);
 
     // Check keyword matches
     for (const keyword of pattern.keywords) {
@@ -276,7 +275,6 @@ export class AICircuitGenerator {
    * Calculate confidence score for the generated circuit
    */
   private static calculateConfidence(description: string, pattern: CircuitPattern): number {
-    const words = description.split(/\s+/);
     let matches = 0;
 
     for (const keyword of pattern.keywords) {
@@ -317,7 +315,7 @@ export class AICircuitGenerator {
         connections.push({
           from: { componentId: components[i].id, pin: 'OUT' },
           to: { componentId: components[i + 1].id, pin: 'IN' },
-          wireType: 'POWER',
+          wireType: WireType.POWER,
           label: `Connection ${i + 1}`,
         });
       }

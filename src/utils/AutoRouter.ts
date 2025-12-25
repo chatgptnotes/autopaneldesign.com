@@ -9,7 +9,7 @@
  * - Collision detection with components
  */
 
-import { Position3D, ComponentInstance, WireInstance, PanelConfig, Waypoint } from '../types';
+import { Position3D, ComponentInstance, PanelConfig, Waypoint } from '../types';
 import * as THREE from 'three';
 
 // ============================================================================
@@ -70,8 +70,9 @@ export function routeWire(
 function createGrid(
   panel: PanelConfig,
   components: ComponentInstance[],
-  resolution: number
+  _resolution: number
 ): GridNode[][][] {
+  const resolution = _resolution;
   const width = Math.ceil(panel.width / resolution);
   const height = Math.ceil(panel.height / resolution);
   const depth = Math.ceil(panel.depth / resolution);

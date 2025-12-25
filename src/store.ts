@@ -237,7 +237,7 @@ export const useStore = create<StoreState>()(
           id: connectionId,
           fromPinId,
           toPinId,
-          wireType: 'SIGNAL', // Default, could be determined by pin types
+          wireType: 'SIGNAL' as any, // Default, could be determined by pin types
         };
 
         state.logicalConnections.push(newConnection);

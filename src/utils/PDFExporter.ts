@@ -289,7 +289,7 @@ export class PDFExporter {
   /**
    * Add circuit diagram (simplified schematic representation)
    */
-  private static addCircuitDiagram(doc: jsPDF, circuit: CircuitDiagram, yPos: number) {
+  private static addCircuitDiagram(doc: jsPDF, _circuit: CircuitDiagram, yPos: number) {
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text('CIRCUIT DIAGRAM', 15, yPos);

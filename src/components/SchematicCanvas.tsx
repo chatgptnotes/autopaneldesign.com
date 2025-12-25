@@ -11,7 +11,6 @@ import ReactFlow, {
   Background,
   BackgroundVariant,
   Connection,
-  addEdge,
   useNodesState,
   useEdgesState,
   Panel,
@@ -19,7 +18,6 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { useStore } from '../store';
-import { ComponentType } from '../types';
 import ComponentNode from './ComponentNode';
 
 const nodeTypes = {
