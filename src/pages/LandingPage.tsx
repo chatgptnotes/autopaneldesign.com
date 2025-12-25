@@ -3,6 +3,7 @@
  */
 
 import React from 'react';
+import FAQ from '../components/FAQ';
 
 interface LandingPageProps {
   onEnterApp: () => void;
@@ -242,6 +243,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
             Start Designing for Free
           </button>
         </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="px-6 py-20 bg-white">
+        <FAQ />
       </div>
 
       {/* Footer */}
