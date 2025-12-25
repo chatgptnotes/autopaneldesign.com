@@ -82,7 +82,7 @@ const App: React.FC = () => {
       <footer className="bg-gray-800 text-gray-400 px-6 py-2 text-xs border-t border-gray-700">
         <div className="flex justify-between items-center">
           <div>
-            <span className="text-gray-500">autopaneldesign.com</span> | Version 1.1 | Last updated: {new Date().toLocaleDateString()}
+            <span className="text-gray-500">autopaneldesign.com</span> | Version 1.2 | Last updated: {new Date().toLocaleDateString()}
           </div>
           <div className="flex gap-4">
             <a href="https://github.com/chatgptnotes/autopaneldesign.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">

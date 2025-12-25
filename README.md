@@ -151,7 +151,15 @@ https://github.com/chatgptnotes/autopaneldesign.com
 
 ## Version
 
-1.0 - Initial MVP Release
+1.2 - PDF Export Release
+
+### Latest Updates (v1.2)
+- Professional PDF export for DOL starter circuits
+- 3-page comprehensive documentation
+- Bill of Materials with manufacturer details
+- Wiring connection tables
+- Technical notes and safety warnings
+- Standards compliance documentation
 
 ---
 
