@@ -17,6 +17,7 @@ import {
   ChevronRight,
   Network,
 } from 'lucide-react';
+import Logo from './Logo';
 
 // ============================================================================
 // TYPES
@@ -144,8 +145,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentFeature, onFeatureSelect, isCo
       {/* Logo / Header */}
       <div className="px-6 py-6 border-b border-slate-700">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Zap className="w-6 h-6 text-white" />
+          <div className="flex-shrink-0">
+            <Logo size={isCollapsed ? 40 : 48} />
           </div>
           {!isCollapsed && (
             <div>

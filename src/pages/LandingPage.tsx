@@ -282,9 +282,40 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnterApp }) => {
               </ul>
             </div>
           </div>
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
-            <p>Version 1.1 | Last updated: {new Date().toLocaleDateString()} | autopaneldesign.com</p>
-            <p className="mt-2">© 2025 AutoPanel Design. All rights reserved.</p>
+          <div className="border-t border-gray-800 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+              <div className="text-gray-500">
+                © {new Date().getFullYear()} AutoPanel Design • Version 1.3
+              </div>
+
+              <div className="flex items-center gap-4">
+                <a
+                  href="https://bettroi.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                  </svg>
+                  <span className="font-medium">Bettroi Product</span>
+                </a>
+
+                <span className="text-gray-700">|</span>
+
+                <a
+                  href="https://drmhope.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-medium">Powered by DrM Hope Softwares</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
