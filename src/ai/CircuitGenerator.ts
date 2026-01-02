@@ -67,6 +67,64 @@ export const CIRCUIT_PATTERNS: CircuitPattern[] = [
   },
 
   {
+    id: 'star_delta_starter',
+    name: 'Star-Delta Motor Starter',
+    keywords: ['star', 'delta', 'wye', 'motor', 'starter', 'reduced', 'voltage'],
+    description: 'Star-Delta reduced voltage motor starter with timer',
+    template: {
+      description: 'Star-Delta motor starter with automatic transition from star to delta configuration',
+      components: [
+        // Power circuit components
+        { id: 'q1', type: ComponentType.MCB, label: 'Q1 (50A CB)', position: { x: 100, y: 100 } },
+        { id: 'km1', type: ComponentType.CONTACTOR, label: 'KM1 Main', position: { x: 220, y: 200 } },
+        { id: 'f1', type: ComponentType.RELAY, label: 'F1 Overload', position: { x: 220, y: 320 } },
+        { id: 'm1', type: ComponentType.MOTOR, label: 'M1 Motor', position: { x: 220, y: 460 } },
+
+        // Star and Delta contactors
+        { id: 'km2', type: ComponentType.CONTACTOR, label: 'KM2 Star', position: { x: 100, y: 400 } },
+        { id: 'km3', type: ComponentType.CONTACTOR, label: 'KM3 Delta', position: { x: 340, y: 400 } },
+
+        // Control circuit components
+        { id: 's0', type: ComponentType.SENSOR, label: 'S0 Stop', position: { x: 450, y: 100 } },
+        { id: 's1', type: ComponentType.SENSOR, label: 'S1 Start', position: { x: 450, y: 180 } },
+        { id: 'kt', type: ComponentType.TIMER, label: 'KT Timer', position: { x: 450, y: 260 } },
+        { id: 'km1_coil', type: ComponentType.RELAY, label: 'KM1 Coil', position: { x: 450, y: 340 } },
+        { id: 'km2_coil', type: ComponentType.RELAY, label: 'KM2 Coil', position: { x: 550, y: 340 } },
+        { id: 'km3_coil', type: ComponentType.RELAY, label: 'KM3 Coil', position: { x: 650, y: 340 } },
+      ],
+      connections: [
+        // Power circuit - Q1 to KM1
+        { from: { componentId: 'q1', pin: 'OUT' }, to: { componentId: 'km1', pin: 'L1' }, wireType: WireType.POWER, label: 'L1' },
+        { from: { componentId: 'q1', pin: 'OUT' }, to: { componentId: 'km1', pin: 'L2' }, wireType: WireType.POWER, label: 'L2' },
+        { from: { componentId: 'q1', pin: 'OUT' }, to: { componentId: 'km1', pin: 'L3' }, wireType: WireType.POWER, label: 'L3' },
+
+        // KM1 to Overload
+        { from: { componentId: 'km1', pin: 'T1' }, to: { componentId: 'f1', pin: 'IN' }, wireType: WireType.POWER, label: 'U1' },
+        { from: { componentId: 'km1', pin: 'T2' }, to: { componentId: 'f1', pin: 'IN' }, wireType: WireType.POWER, label: 'V1' },
+        { from: { componentId: 'km1', pin: 'T3' }, to: { componentId: 'f1', pin: 'IN' }, wireType: WireType.POWER, label: 'W1' },
+
+        // Overload to Motor (U1, V1, W1)
+        { from: { componentId: 'f1', pin: 'OUT' }, to: { componentId: 'm1', pin: 'U' }, wireType: WireType.POWER, label: 'U1' },
+        { from: { componentId: 'f1', pin: 'OUT' }, to: { componentId: 'm1', pin: 'V' }, wireType: WireType.POWER, label: 'V1' },
+        { from: { componentId: 'f1', pin: 'OUT' }, to: { componentId: 'm1', pin: 'W' }, wireType: WireType.POWER, label: 'W1' },
+
+        // Star contactor (KM2) for motor U2-V2-W2 star point
+        { from: { componentId: 'km2', pin: 'OUT' }, to: { componentId: 'm1', pin: 'STAR' }, wireType: WireType.POWER, label: 'Star' },
+
+        // Delta contactor (KM3) for motor U2-V2-W2 delta
+        { from: { componentId: 'km3', pin: 'OUT' }, to: { componentId: 'm1', pin: 'DELTA' }, wireType: WireType.POWER, label: 'Delta' },
+
+        // Control circuit
+        { from: { componentId: 's0', pin: 'OUT' }, to: { componentId: 's1', pin: 'IN' }, wireType: WireType.SIGNAL, label: 'Stop' },
+        { from: { componentId: 's1', pin: 'OUT' }, to: { componentId: 'kt', pin: 'IN' }, wireType: WireType.SIGNAL, label: 'Start' },
+        { from: { componentId: 'kt', pin: 'OUT' }, to: { componentId: 'km1_coil', pin: 'A1' }, wireType: WireType.SIGNAL, label: 'KM1' },
+        { from: { componentId: 'kt', pin: 'OUT' }, to: { componentId: 'km2_coil', pin: 'A1' }, wireType: WireType.SIGNAL, label: 'KM2' },
+        { from: { componentId: 'kt', pin: 'DELAY' }, to: { componentId: 'km3_coil', pin: 'A1' }, wireType: WireType.SIGNAL, label: 'KM3' },
+      ],
+    },
+  },
+
+  {
     id: 'lighting_control',
     name: 'Lighting Control Circuit',
     keywords: ['light', 'lighting', 'lamp', 'switch', 'relay', 'control'],

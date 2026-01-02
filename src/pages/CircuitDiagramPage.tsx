@@ -10,14 +10,14 @@ import React, { useState, useEffect } from 'react';
 import { DynamicEPLANRenderer } from '../components/DynamicEPLANRenderer';
 import { AICircuitGenerator, CircuitTemplate } from '../ai/CircuitGenerator';
 
-type CircuitKeyword = 'motor' | 'lighting' | 'plc' | 'power' | 'hvac' | 'pump';
+type CircuitKeyword = 'motor' | 'star-delta' | 'lighting' | 'plc' | 'power' | 'hvac' | 'pump';
 
 const CircuitDiagramPage: React.FC = () => {
-  const [circuitKeyword, setCircuitKeyword] = useState<CircuitKeyword>('motor');
+  const [circuitKeyword, setCircuitKeyword] = useState<CircuitKeyword>('star-delta');
   const [voltage, setVoltage] = useState('400V');
   const [phases, setPhases] = useState(3);
   const [frequency, setFrequency] = useState('50Hz');
-  const [motorPower, setMotorPower] = useState('5.5kW');
+  const [motorPower, setMotorPower] = useState('7.5kW');
   const [generatedTemplate, setGeneratedTemplate] = useState<CircuitTemplate | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -75,6 +75,7 @@ const CircuitDiagramPage: React.FC = () => {
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="motor">Motor Starter (DOL)</option>
+                <option value="star-delta">Star-Delta Starter</option>
                 <option value="lighting">Lighting Control</option>
                 <option value="plc">PLC Control System</option>
                 <option value="power">Power Distribution</option>
@@ -309,6 +310,9 @@ function buildCircuitDescription(
   switch (keyword) {
     case 'motor':
       return `Create a DOL motor starter circuit with ${voltage} ${phaseText} ${frequency} power supply, ${motorPower} motor, with start stop buttons, contactor, and overload protection`;
+
+    case 'star-delta':
+      return `Create a star-delta reduced voltage motor starter circuit with ${voltage} ${phaseText} ${frequency} power supply, ${motorPower} motor, with start stop buttons, star contactor, delta contactor, main contactor, timer relay, and overload protection`;
 
     case 'lighting':
       return `Create a lighting control circuit with ${voltage} ${phaseText} power supply, relay control, and light switch`;
