@@ -18,6 +18,7 @@ export enum ComponentType {
   SENSOR = 'SENSOR',
   TERMINAL = 'TERMINAL',
   POWER_SUPPLY = 'POWER_SUPPLY',
+  MOTOR = 'MOTOR',          // Electric Motor
 }
 
 export enum PinType {
