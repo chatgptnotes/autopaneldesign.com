@@ -315,3 +315,84 @@ export interface RoutingGrid {
   cellSize: number;         // Size of each grid cell in mm
   cells: GridCell[][][];
 }
+
+// ============================================================================
+// GEMINI AI INTEGRATION TYPES
+// ============================================================================
+
+/**
+ * Error types for Gemini API responses
+ */
+export type GeminiAPIErrorType =
+  | 'API_KEY_INVALID'
+  | 'RATE_LIMIT'
+  | 'NETWORK_ERROR'
+  | 'PARSE_ERROR'
+  | 'UNKNOWN';
+
+/**
+ * Structured error from Gemini API
+ */
+export interface GeminiAPIError {
+  type: GeminiAPIErrorType;
+  message: string;
+  details?: string;
+}
+
+/**
+ * Pin definition for AI-generated new components
+ */
+export interface NewPinDefinition {
+  label: string;
+  type: PinType;
+  relativePosition: { x: number; y: number };
+}
+
+/**
+ * Specification for a new component created by AI (not in library)
+ */
+export interface NewComponentSpec {
+  id: string;
+  type: ComponentType;
+  label: string;
+  suggestedManufacturer?: string;
+  suggestedModelNumber?: string;
+  ratings?: {
+    voltage?: number;
+    current?: number;
+    frequency?: number;
+  };
+  pinDefinitions: NewPinDefinition[];
+}
+
+/**
+ * Component as returned by Gemini AI
+ */
+export interface GeminiComponentSpec {
+  id: string;
+  type: string;
+  label: string;
+  libraryId: string | null;  // null if AI-created new component
+  position: { x: number; y: number };
+}
+
+/**
+ * Connection as returned by Gemini AI
+ */
+export interface GeminiConnectionSpec {
+  from: { componentId: string; pin: string };
+  to: { componentId: string; pin: string };
+  wireType: string;
+  label?: string;
+}
+
+/**
+ * Complete response structure from Gemini AI
+ */
+export interface GeminiCircuitResponse {
+  description: string;
+  reasoning?: string;
+  components: GeminiComponentSpec[];
+  connections: GeminiConnectionSpec[];
+  newComponents?: NewComponentSpec[];
+}

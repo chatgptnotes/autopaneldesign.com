@@ -1,10 +1,12 @@
 /**
  * PDF Exporter: Generate professional electrical circuit diagrams
  * Creates industry-standard schematics with symbols, BOM, and specifications
+ * Supports AI-generated circuit diagrams from Gemini
  */
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { CircuitTemplate } from '../ai/CircuitGenerator';
 
 // ============================================================================
 // DOL STARTER CIRCUIT TEMPLATE
@@ -173,17 +175,21 @@ export class PDFExporter {
       format: 'a4',
     });
 
-    let yPos = 20;
-
     // Page 1: Title and Circuit Diagram
     this.addTitleBlock(doc, circuit);
-    yPos = 70;
+
+    // Start after title block (which ends at y=50)
+    let yPos = 55;
 
     this.addProjectInfo(doc, circuit, yPos);
-    yPos += 40;
+    // Get the actual ending Y position from the table
+    yPos = (doc as any).lastAutoTable?.finalY || yPos + 50;
+    yPos += 10; // Add padding
 
     this.addPowerRatings(doc, circuit, yPos);
-    yPos += 30;
+    // Get the actual ending Y position from the table
+    yPos = (doc as any).lastAutoTable?.finalY || yPos + 35;
+    yPos += 10; // Add padding
 
     this.addCircuitDiagram(doc, circuit, yPos);
 
@@ -192,7 +198,9 @@ export class PDFExporter {
     yPos = 20;
 
     this.addBOM(doc, circuit, yPos);
-    yPos = 160;
+    // Get the actual ending Y position from the BOM table
+    yPos = (doc as any).lastAutoTable?.finalY || yPos + 120;
+    yPos += 15; // Add padding
 
     this.addWiringTable(doc, circuit, yPos);
 
@@ -287,72 +295,411 @@ export class PDFExporter {
   }
 
   /**
-   * Add circuit diagram (simplified schematic representation)
+   * Add circuit diagram with professional IEC 60617 electrical symbols
    */
   private static addCircuitDiagram(doc: jsPDF, _circuit: CircuitDiagram, yPos: number) {
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
     doc.text('CIRCUIT DIAGRAM', 15, yPos);
 
-    const diagramY = yPos + 10;
+    const diagramY = yPos + 8;
 
-    // Draw power lines
-    doc.setDrawColor(255, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.line(30, diagramY, 30, diagramY + 100); // L1
-    doc.setDrawColor(255, 215, 0);
-    doc.line(50, diagramY, 50, diagramY + 100); // L2
-    doc.setDrawColor(0, 0, 255);
-    doc.line(70, diagramY, 70, diagramY + 100); // L3
+    // ============================================
+    // POWER CIRCUIT (Left side)
+    // ============================================
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('POWER CIRCUIT', 25, diagramY);
 
-    // Labels
+    // Power supply lines L1, L2, L3 with proper colors
+    const powerX = 30;
+    const lineSpacing = 20;
+
+    // Phase labels at top
     doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text('L1', 28, diagramY - 2);
-    doc.text('L2', 48, diagramY - 2);
-    doc.text('L3', 68, diagramY - 2);
+    doc.setFont('helvetica', 'bold');
+    doc.text('L1', powerX - 2, diagramY + 8);
+    doc.text('L2', powerX + lineSpacing - 2, diagramY + 8);
+    doc.text('L3', powerX + lineSpacing * 2 - 2, diagramY + 8);
 
-    // QF1 - Main Breaker
+    // Vertical power lines from top
+    doc.setLineWidth(0.4);
     doc.setDrawColor(0, 0, 0);
-    doc.rect(25, diagramY + 5, 50, 10);
-    doc.text('QF1', 48, diagramY + 11);
+    doc.line(powerX, diagramY + 10, powerX, diagramY + 18); // L1
+    doc.line(powerX + lineSpacing, diagramY + 10, powerX + lineSpacing, diagramY + 18); // L2
+    doc.line(powerX + lineSpacing * 2, diagramY + 10, powerX + lineSpacing * 2, diagramY + 18); // L3
 
-    // KM1 - Contactor
-    doc.rect(25, diagramY + 25, 50, 10);
-    doc.text('KM1', 48, diagramY + 31);
+    // QF1 - MCB Symbol (Circuit Breaker with diagonal break)
+    const mcbY = diagramY + 18;
+    this.drawMCBSymbol(doc, powerX, mcbY, lineSpacing);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text('QF1', powerX + lineSpacing * 2 + 5, mcbY + 6);
+    doc.text('MCB 32A', powerX + lineSpacing * 2 + 5, mcbY + 10);
 
-    // F1 - Overload
-    doc.rect(25, diagramY + 45, 50, 10);
-    doc.text('F1', 48, diagramY + 51);
+    // Lines between MCB and Contactor
+    doc.setDrawColor(0, 0, 0);
+    doc.line(powerX, mcbY + 12, powerX, mcbY + 20);
+    doc.line(powerX + lineSpacing, mcbY + 12, powerX + lineSpacing, mcbY + 20);
+    doc.line(powerX + lineSpacing * 2, mcbY + 12, powerX + lineSpacing * 2, mcbY + 20);
 
-    // M1 - Motor symbol
-    doc.circle(50, diagramY + 70, 8);
-    doc.text('M1', 48, diagramY + 72);
-    doc.text('3~', 48, diagramY + 78);
+    // KM1 - Contactor Main Contacts Symbol
+    const contactorY = mcbY + 20;
+    this.drawContactorSymbol(doc, powerX, contactorY, lineSpacing);
+    doc.setFontSize(7);
+    doc.text('KM1', powerX + lineSpacing * 2 + 5, contactorY + 6);
+    doc.text('Contactor', powerX + lineSpacing * 2 + 5, contactorY + 10);
 
-    // Control circuit
-    doc.setDrawColor(100, 100, 100);
-    doc.line(120, diagramY + 10, 180, diagramY + 10);
+    // Lines between Contactor and OLR
+    doc.line(powerX, contactorY + 12, powerX, contactorY + 20);
+    doc.line(powerX + lineSpacing, contactorY + 12, powerX + lineSpacing, contactorY + 20);
+    doc.line(powerX + lineSpacing * 2, contactorY + 12, powerX + lineSpacing * 2, contactorY + 20);
 
-    // Stop button
-    doc.rect(125, diagramY + 8, 10, 4);
-    doc.text('SB2', 128, diagramY + 7);
-    doc.text('STOP', 126, diagramY + 15);
+    // F1 - Overload Relay Symbol
+    const olrY = contactorY + 20;
+    this.drawOLRSymbol(doc, powerX, olrY, lineSpacing);
+    doc.setFontSize(7);
+    doc.text('F1', powerX + lineSpacing * 2 + 5, olrY + 6);
+    doc.text('OLR 20-25A', powerX + lineSpacing * 2 + 5, olrY + 10);
 
-    // Start button
-    doc.rect(145, diagramY + 8, 10, 4);
-    doc.text('SB1', 148, diagramY + 7);
-    doc.text('START', 145, diagramY + 15);
+    // Lines from OLR to Motor
+    doc.line(powerX, olrY + 12, powerX, olrY + 22);
+    doc.line(powerX + lineSpacing, olrY + 12, powerX + lineSpacing, olrY + 22);
+    doc.line(powerX + lineSpacing * 2, olrY + 12, powerX + lineSpacing * 2, olrY + 22);
 
-    // Coil
-    doc.rect(165, diagramY + 8, 10, 4);
-    doc.text('KM1', 167, diagramY + 7);
-    doc.text('A1-A2', 165, diagramY + 15);
+    // Motor terminal labels
+    doc.setFontSize(6);
+    doc.text('U', powerX - 1, olrY + 25);
+    doc.text('V', powerX + lineSpacing - 1, olrY + 25);
+    doc.text('W', powerX + lineSpacing * 2 - 1, olrY + 25);
 
-    // Legend
+    // Converging lines to motor
+    const motorCenterX = powerX + lineSpacing;
+    const motorY = olrY + 35;
+    doc.line(powerX, olrY + 26, motorCenterX, motorY - 8);
+    doc.line(powerX + lineSpacing, olrY + 26, motorCenterX, motorY - 8);
+    doc.line(powerX + lineSpacing * 2, olrY + 26, motorCenterX, motorY - 8);
+    doc.line(motorCenterX, motorY - 8, motorCenterX, motorY - 5);
+
+    // M1 - Motor Symbol (Circle with M)
+    this.drawMotorSymbol(doc, motorCenterX, motorY);
+    doc.setFontSize(7);
+    doc.text('M1', motorCenterX + 12, motorY);
+    doc.text('7.5kW', motorCenterX + 12, motorY + 4);
+
+    // ============================================
+    // CONTROL CIRCUIT (Right side)
+    // ============================================
+    const controlX = 115;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CONTROL CIRCUIT', controlX, diagramY);
+
+    // Control power labels
+    doc.setFontSize(8);
+    doc.text('L', controlX, diagramY + 8);
+    doc.text('N', controlX + 55, diagramY + 8);
+
+    // Control circuit horizontal line at top
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.4);
+    const ctrlY = diagramY + 12;
+    doc.line(controlX, ctrlY, controlX, ctrlY + 8);
+
+    // FU1 - Control Fuse Symbol
+    this.drawFuseSymbol(doc, controlX, ctrlY + 8);
+    doc.setFontSize(6);
+    doc.text('FU1', controlX + 5, ctrlY + 12);
+
+    doc.line(controlX, ctrlY + 18, controlX, ctrlY + 26);
+
+    // SB2 - STOP Button (NC - Normally Closed)
+    const stopY = ctrlY + 26;
+    this.drawNCButtonSymbol(doc, controlX, stopY);
+    doc.setFontSize(7);
+    doc.text('SB2', controlX + 8, stopY + 3);
+    doc.setFontSize(6);
+    doc.text('STOP', controlX + 8, stopY + 7);
+
+    doc.line(controlX, stopY + 8, controlX, stopY + 16);
+
+    // SB1 - START Button (NO - Normally Open)
+    const startY = stopY + 16;
+    this.drawNOButtonSymbol(doc, controlX, startY);
+    doc.setFontSize(7);
+    doc.text('SB1', controlX + 8, startY + 3);
+    doc.setFontSize(6);
+    doc.text('START', controlX + 8, startY + 7);
+
+    // Holding contact (parallel to START)
+    doc.line(controlX, startY, controlX - 8, startY);
+    doc.line(controlX - 8, startY, controlX - 8, startY + 12);
+    this.drawNOContactSymbol(doc, controlX - 8, startY + 12);
+    doc.setFontSize(6);
+    doc.text('KM1', controlX - 15, startY + 16);
+    doc.line(controlX - 8, startY + 18, controlX - 8, startY + 24);
+    doc.line(controlX - 8, startY + 24, controlX, startY + 24);
+
+    doc.line(controlX, startY + 8, controlX, startY + 24);
+
+    // F1 OLR NC contact in series
+    const olrContactY = startY + 24;
+    doc.line(controlX, olrContactY, controlX, olrContactY + 8);
+    this.drawNCContactSymbol(doc, controlX, olrContactY + 8);
+    doc.setFontSize(6);
+    doc.text('F1', controlX + 8, olrContactY + 12);
+    doc.text('95-96', controlX + 8, olrContactY + 16);
+
+    // KM1 Contactor Coil
+    const coilY = olrContactY + 20;
+    doc.line(controlX, olrContactY + 14, controlX, coilY);
+    this.drawCoilSymbol(doc, controlX, coilY);
+    doc.setFontSize(7);
+    doc.text('KM1', controlX + 10, coilY + 5);
+    doc.setFontSize(6);
+    doc.text('A1', controlX - 8, coilY + 2);
+    doc.text('A2', controlX - 8, coilY + 10);
+
+    // Neutral line
+    doc.line(controlX, coilY + 12, controlX, coilY + 18);
+    doc.line(controlX, coilY + 18, controlX + 55, coilY + 18);
+    doc.line(controlX + 55, ctrlY, controlX + 55, coilY + 18);
+
+    // ============================================
+    // STATUS INDICATORS (Bottom right)
+    // ============================================
+    const indicatorX = 160;
+    const indicatorY = diagramY + 60;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('STATUS INDICATORS', indicatorX, indicatorY);
+
+    // RUN indicator (Green)
+    doc.setFillColor(34, 197, 94); // Green
+    doc.circle(indicatorX + 8, indicatorY + 12, 5, 'F');
+    doc.setDrawColor(0, 0, 0);
+    doc.circle(indicatorX + 8, indicatorY + 12, 5, 'S');
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text('HL1', indicatorX + 16, indicatorY + 10);
+    doc.text('RUN', indicatorX + 16, indicatorY + 14);
+
+    // TRIP indicator (Red)
+    doc.setFillColor(239, 68, 68); // Red
+    doc.circle(indicatorX + 8, indicatorY + 26, 5, 'F');
+    doc.setDrawColor(0, 0, 0);
+    doc.circle(indicatorX + 8, indicatorY + 26, 5, 'S');
+    doc.setFontSize(7);
+    doc.text('HL2', indicatorX + 16, indicatorY + 24);
+    doc.text('TRIP', indicatorX + 16, indicatorY + 28);
+
+    // ============================================
+    // DIAGRAM LEGEND
+    // ============================================
     doc.setFontSize(8);
     doc.setFont('helvetica', 'italic');
-    doc.text('Power Circuit (Left) | Control Circuit (Right)', 105, yPos + 110, { align: 'center' });
+    doc.text('IEC 60617 Standard Symbols | Power Circuit (Left) | Control Circuit (Right)', 105, yPos + 105, { align: 'center' });
+  }
+
+  // ============================================
+  // IEC SYMBOL DRAWING HELPERS
+  // ============================================
+
+  /**
+   * Draw MCB (Circuit Breaker) symbol - Rectangle with diagonal break line
+   */
+  private static drawMCBSymbol(doc: jsPDF, x: number, y: number, spacing: number) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+
+    for (let i = 0; i < 3; i++) {
+      const posX = x + i * spacing;
+      // Input line
+      doc.line(posX, y, posX, y + 2);
+      // Break symbol (diagonal line with gap)
+      doc.line(posX, y + 2, posX + 3, y + 5);
+      doc.line(posX, y + 5, posX - 1, y + 8);
+      // Small rectangle for thermal/magnetic element
+      doc.rect(posX - 2, y + 8, 4, 4);
+      // Output line
+      doc.line(posX, y + 12, posX, y + 12);
+    }
+  }
+
+  /**
+   * Draw Contactor main contacts symbol
+   */
+  private static drawContactorSymbol(doc: jsPDF, x: number, y: number, spacing: number) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+
+    for (let i = 0; i < 3; i++) {
+      const posX = x + i * spacing;
+      // Input line
+      doc.line(posX, y, posX, y + 3);
+      // Contact symbol (NO contact)
+      doc.line(posX, y + 3, posX, y + 4);
+      doc.line(posX - 2, y + 4, posX + 3, y + 8);
+      // Fixed contact point
+      doc.circle(posX, y + 9, 0.8, 'F');
+      // Output line
+      doc.line(posX, y + 10, posX, y + 12);
+    }
+
+    // Mechanical linkage line (dashed)
+    doc.setLineDashPattern([1, 1], 0);
+    doc.line(x - 2, y + 6, x + spacing * 2 + 2, y + 6);
+    doc.setLineDashPattern([], 0);
+  }
+
+  /**
+   * Draw Overload Relay (OLR) thermal symbol
+   */
+  private static drawOLRSymbol(doc: jsPDF, x: number, y: number, spacing: number) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+
+    for (let i = 0; i < 3; i++) {
+      const posX = x + i * spacing;
+      // Input line
+      doc.line(posX, y, posX, y + 2);
+      // Thermal element (zigzag/heater)
+      const zigzagY = y + 2;
+      doc.line(posX, zigzagY, posX - 2, zigzagY + 2);
+      doc.line(posX - 2, zigzagY + 2, posX + 2, zigzagY + 4);
+      doc.line(posX + 2, zigzagY + 4, posX - 2, zigzagY + 6);
+      doc.line(posX - 2, zigzagY + 6, posX, zigzagY + 8);
+      // Output line
+      doc.line(posX, y + 10, posX, y + 12);
+    }
+
+    // Bimetallic trip indicator
+    doc.setLineDashPattern([0.5, 0.5], 0);
+    doc.line(x - 3, y + 6, x + spacing * 2 + 3, y + 6);
+    doc.setLineDashPattern([], 0);
+  }
+
+  /**
+   * Draw Motor symbol - Circle with M and 3~
+   */
+  private static drawMotorSymbol(doc: jsPDF, x: number, y: number) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.4);
+
+    // Motor circle
+    doc.circle(x, y, 8, 'S');
+
+    // M letter
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('M', x - 3, y + 1);
+
+    // 3-phase indicator
+    doc.setFontSize(6);
+    doc.text('3~', x - 2, y + 5);
+
+    // Ground symbol below motor
+    doc.line(x, y + 8, x, y + 11);
+    doc.line(x - 4, y + 11, x + 4, y + 11);
+    doc.line(x - 2.5, y + 12, x + 2.5, y + 12);
+    doc.line(x - 1, y + 13, x + 1, y + 13);
+  }
+
+  /**
+   * Draw Fuse symbol
+   */
+  private static drawFuseSymbol(doc: jsPDF, x: number, y: number) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+
+    // Rectangle with internal line
+    doc.rect(x - 2, y, 4, 10);
+    doc.line(x, y, x, y + 10);
+  }
+
+  /**
+   * Draw NC (Normally Closed) Push Button symbol
+   */
+  private static drawNCButtonSymbol(doc: jsPDF, x: number, y: number) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+
+    // Input line
+    doc.line(x, y, x, y + 2);
+    // Closed contact bar
+    doc.line(x - 3, y + 2, x + 3, y + 2);
+    // Push button actuator
+    doc.line(x, y + 2, x, y + 4);
+    doc.line(x - 2, y + 4, x + 2, y + 4);
+    doc.line(x, y + 4, x, y + 6);
+    // Output contact point
+    doc.circle(x, y + 6, 0.6, 'F');
+    doc.line(x, y + 6, x, y + 8);
+  }
+
+  /**
+   * Draw NO (Normally Open) Push Button symbol
+   */
+  private static drawNOButtonSymbol(doc: jsPDF, x: number, y: number) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+
+    // Input line
+    doc.line(x, y, x, y + 2);
+    // Open contact
+    doc.circle(x, y + 2, 0.6, 'F');
+    // Gap and tilted contact
+    doc.line(x, y + 2, x + 3, y + 5);
+    // Push button actuator
+    doc.line(x + 1.5, y + 3.5, x + 1.5, y + 5);
+    doc.line(x, y + 5, x + 3, y + 5);
+    // Output contact point
+    doc.circle(x, y + 6, 0.6, 'F');
+    doc.line(x, y + 6, x, y + 8);
+  }
+
+  /**
+   * Draw NO Contact symbol (auxiliary contact)
+   */
+  private static drawNOContactSymbol(doc: jsPDF, x: number, y: number) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+
+    doc.circle(x, y, 0.6, 'F');
+    doc.line(x, y, x + 3, y + 4);
+    doc.circle(x, y + 5, 0.6, 'F');
+    doc.line(x, y + 5, x, y + 6);
+  }
+
+  /**
+   * Draw NC Contact symbol (auxiliary contact)
+   */
+  private static drawNCContactSymbol(doc: jsPDF, x: number, y: number) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+
+    doc.line(x - 3, y, x + 3, y);
+    doc.line(x, y, x, y + 2);
+    doc.circle(x, y + 3, 0.6, 'F');
+    doc.line(x, y + 3, x, y + 6);
+  }
+
+  /**
+   * Draw Coil symbol (contactor/relay coil)
+   */
+  private static drawCoilSymbol(doc: jsPDF, x: number, y: number) {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
+
+    // Coil rectangle with curved sides
+    doc.rect(x - 4, y, 8, 12);
+
+    // Internal coil representation (semicircles)
+    const coilY = y + 2;
+    for (let i = 0; i < 3; i++) {
+      // Small arc representations
+      doc.line(x - 2, coilY + i * 3, x + 2, coilY + i * 3);
+    }
   }
 
   /**
@@ -511,5 +858,293 @@ export class PDFExporter {
    */
   static downloadPDF(pdf: jsPDF, filename: string = 'DOL_Starter_Circuit.pdf') {
     pdf.save(filename);
+  }
+
+  // ============================================================================
+  // AI-GENERATED CIRCUIT PDF
+  // ============================================================================
+
+  /**
+   * Generate PDF from AI-generated circuit template with captured diagram image
+   */
+  static generateAICircuitPDF(
+    template: CircuitTemplate,
+    diagramImage: string, // Base64 data URL of the captured SVG diagram
+    config: {
+      voltage?: string;
+      phases?: number;
+      frequency?: string;
+      projectName?: string;
+    } = {}
+  ): jsPDF {
+    const doc = new jsPDF({
+      orientation: 'landscape', // Landscape for better diagram display
+      unit: 'mm',
+      format: 'a4',
+    });
+
+    const {
+      voltage = '400V AC',
+      phases = 3,
+      frequency = '50Hz',
+      projectName = 'AI Generated Circuit',
+    } = config;
+
+    // Page 1: Title and Circuit Diagram (from AI)
+    this.addAITitleBlock(doc, template, projectName);
+    this.addAIDiagramImage(doc, diagramImage);
+
+    // Page 2: BOM and Connections
+    doc.addPage();
+    this.addAIBOM(doc, template);
+    this.addAIConnections(doc, template);
+
+    // Page 3: Technical Notes
+    doc.addPage();
+    this.addAITechnicalNotes(doc, template, { voltage, phases, frequency });
+
+    // Add footer to all pages
+    this.addAIFooter(doc);
+
+    return doc;
+  }
+
+  /**
+   * Add title block for AI-generated circuit
+   */
+  private static addAITitleBlock(doc: jsPDF, template: CircuitTemplate, projectName: string) {
+    // Border
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(1);
+    doc.rect(10, 10, 277, 25);
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text(template.description || 'AI-Generated Circuit', 148.5, 20, { align: 'center' });
+
+    // Subtitle
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Project: ${projectName} | Generated by Gemini AI`, 148.5, 28, { align: 'center' });
+
+    // Company and revision
+    doc.setFontSize(9);
+    doc.text('AutoPanel Design', 15, 32);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 260, 32);
+  }
+
+  /**
+   * Add the AI-generated diagram image to the PDF
+   */
+  private static addAIDiagramImage(doc: jsPDF, diagramImage: string) {
+    const diagramY = 40;
+    const diagramWidth = 260;
+    const diagramHeight = 140;
+
+    // Add section title
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CIRCUIT DIAGRAM (AI Generated)', 15, diagramY);
+
+    // Add the captured diagram image
+    try {
+      doc.addImage(
+        diagramImage,
+        'PNG',
+        15,
+        diagramY + 5,
+        diagramWidth,
+        diagramHeight,
+        undefined,
+        'MEDIUM'
+      );
+    } catch (error) {
+      // Fallback if image fails
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Diagram image could not be loaded', 148.5, diagramY + 70, { align: 'center' });
+    }
+
+    // Border around diagram
+    doc.setDrawColor(100, 100, 100);
+    doc.setLineWidth(0.5);
+    doc.rect(15, diagramY + 5, diagramWidth, diagramHeight);
+  }
+
+  /**
+   * Add Bill of Materials for AI-generated circuit
+   */
+  private static addAIBOM(doc: jsPDF, template: CircuitTemplate) {
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('BILL OF MATERIALS (BOM)', 15, 20);
+
+    const bomData = template.components.map((comp, index) => [
+      (index + 1).toString(),
+      comp.id,
+      comp.type,
+      comp.label,
+      comp.manufacturer || 'N/A',
+      '1',
+    ]);
+
+    autoTable(doc, {
+      startY: 25,
+      head: [['#', 'Ref', 'Type', 'Description', 'Manufacturer', 'Qty']],
+      body: bomData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold',
+        fontSize: 10,
+      },
+      styles: { fontSize: 9, cellPadding: 3 },
+      columnStyles: {
+        0: { cellWidth: 15 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 80 },
+        4: { cellWidth: 50 },
+        5: { cellWidth: 15 },
+      },
+    });
+  }
+
+  /**
+   * Add connections table for AI-generated circuit
+   */
+  private static addAIConnections(doc: jsPDF, template: CircuitTemplate) {
+    // Get the last Y position from the BOM table
+    const lastY = (doc as any).lastAutoTable?.finalY || 100;
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('WIRING CONNECTIONS', 15, lastY + 15);
+
+    const connectionData = template.connections.map((conn, index) => [
+      (index + 1).toString(),
+      `${conn.from.componentId}.${conn.from.pin}`,
+      `${conn.to.componentId}.${conn.to.pin}`,
+      conn.label || '-',
+      conn.wireType,
+    ]);
+
+    autoTable(doc, {
+      startY: lastY + 20,
+      head: [['#', 'From', 'To', 'Label', 'Wire Type']],
+      body: connectionData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [46, 204, 113],
+        textColor: 255,
+        fontStyle: 'bold',
+        fontSize: 10,
+      },
+      styles: { fontSize: 9, cellPadding: 3 },
+      columnStyles: {
+        0: { cellWidth: 15 },
+        1: { cellWidth: 60 },
+        2: { cellWidth: 60 },
+        3: { cellWidth: 40 },
+        4: { cellWidth: 40 },
+      },
+    });
+  }
+
+  /**
+   * Add technical notes for AI-generated circuit
+   */
+  private static addAITechnicalNotes(
+    doc: jsPDF,
+    template: CircuitTemplate,
+    config: { voltage: string; phases: number; frequency: string }
+  ) {
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TECHNICAL SPECIFICATIONS & NOTES', 15, 20);
+
+    // Power specifications
+    const specData = [
+      ['Circuit Description', template.description],
+      ['Supply Voltage', config.voltage],
+      ['Number of Phases', config.phases.toString()],
+      ['Frequency', config.frequency],
+      ['Total Components', template.components.length.toString()],
+      ['Total Connections', template.connections.length.toString()],
+      ['Generated By', 'Google Gemini AI (gemini-2.0-flash)'],
+      ['Generation Date', new Date().toLocaleString()],
+    ];
+
+    autoTable(doc, {
+      startY: 25,
+      body: specData,
+      theme: 'plain',
+      styles: { fontSize: 10 },
+      columnStyles: {
+        0: { cellWidth: 60, fontStyle: 'bold', fillColor: [240, 240, 240] },
+        1: { cellWidth: 150 },
+      },
+    });
+
+    // Safety warning
+    const lastY = (doc as any).lastAutoTable?.finalY || 80;
+
+    doc.setDrawColor(255, 0, 0);
+    doc.setLineWidth(1);
+    doc.rect(15, lastY + 10, 260, 35);
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 0, 0);
+    doc.text('SAFETY WARNING', 20, lastY + 20);
+
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+    const warningText = doc.splitTextToSize(
+      'This AI-generated circuit diagram is for reference only. All electrical installations must be performed by a qualified electrician in accordance with local electrical codes and regulations (IEC 60204-1, NEC, etc.). The AI-generated design should be verified by a professional engineer before implementation. Disconnect all power sources before working on any circuit.',
+      250
+    );
+    doc.text(warningText, 20, lastY + 27);
+
+    // Standards compliance
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('APPLICABLE STANDARDS:', 15, lastY + 55);
+    doc.setFont('helvetica', 'normal');
+    doc.text('• IEC 60204-1: Safety of Machinery - Electrical Equipment', 15, lastY + 62);
+    doc.text('• IEC 60617: Graphical Symbols for Diagrams', 15, lastY + 68);
+    doc.text('• IEC 60947: Low-voltage Switchgear and Controlgear', 15, lastY + 74);
+  }
+
+  /**
+   * Add footer to AI-generated PDF pages
+   */
+  private static addAIFooter(doc: jsPDF) {
+    const pageCount = doc.getNumberOfPages();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+
+      // Footer line
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.5);
+      doc.line(10, pageHeight - 12, pageWidth - 10, pageHeight - 12);
+
+      // Footer text
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+
+      doc.text('autopaneldesign.com | Powered by Gemini AI', 15, pageHeight - 7);
+      doc.text(`Page ${i} of ${pageCount}`, pageWidth / 2, pageHeight - 7, { align: 'center' });
+      doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 15, pageHeight - 7, {
+        align: 'right',
+      });
+    }
   }
 }

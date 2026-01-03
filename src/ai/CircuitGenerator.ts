@@ -1,9 +1,17 @@
 /**
  * AI Circuit Generator: Converts natural language descriptions to wiring diagrams
- * Uses pattern matching and electrical engineering rules to generate circuits
+ * Uses Gemini AI for intelligent circuit generation with pattern matching fallback
  */
 
-import { ComponentType, WireType } from '../types';
+import {
+  ComponentType,
+  WireType,
+  ComponentDefinition,
+  GeminiAPIError,
+  GeminiCircuitResponse,
+  PinType,
+} from '../types';
+import { GeminiService, ImageGenerationResult } from './services/GeminiService';
 
 // ============================================================================
 // CIRCUIT PATTERNS & TEMPLATES
@@ -239,7 +247,300 @@ export const CIRCUIT_PATTERNS: CircuitPattern[] = [
 
 export class AICircuitGenerator {
   /**
-   * Main entry point: Generate circuit from natural language description
+   * Generate circuit using Gemini AI (async)
+   * This is the primary method for real AI-powered circuit generation
+   */
+  static async generateFromDescriptionWithAI(
+    description: string,
+    componentLibrary: ComponentDefinition[]
+  ): Promise<CircuitGenerationResult> {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash';
+
+    // Check if API key is configured
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+      return {
+        success: false,
+        template: null,
+        patternUsed: 'None',
+        confidence: 0,
+        suggestions: [],
+        error: {
+          type: 'API_KEY_INVALID',
+          message: 'Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file.',
+        },
+      };
+    }
+
+    try {
+      const geminiService = new GeminiService(apiKey, model);
+      const response = await geminiService.generateCircuit(description, componentLibrary);
+
+      // Convert Gemini response to CircuitTemplate
+      const template = this.convertGeminiResponseToTemplate(response, componentLibrary);
+
+      return {
+        success: true,
+        template,
+        patternUsed: 'Gemini AI',
+        confidence: 1.0,
+        suggestions: [],
+        reasoning: response.reasoning,
+      };
+    } catch (error) {
+      // Handle GeminiAPIError
+      if (this.isGeminiAPIError(error)) {
+        return {
+          success: false,
+          template: null,
+          patternUsed: 'None',
+          confidence: 0,
+          suggestions: [],
+          error: error,
+        };
+      }
+
+      // Handle unknown errors
+      return {
+        success: false,
+        template: null,
+        patternUsed: 'None',
+        confidence: 0,
+        suggestions: [],
+        error: {
+          type: 'UNKNOWN',
+          message: 'An unexpected error occurred.',
+          details: error instanceof Error ? error.message : String(error),
+        },
+      };
+    }
+  }
+
+  /**
+   * Generate circuit diagram image using Gemini 2.5 Flash Image
+   * This generates an AI-rendered image of the circuit schematic
+   */
+  static async generateCircuitImage(description: string): Promise<ImageGenerationResult> {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash';
+    const imageModel = import.meta.env.VITE_GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-preview-0520';
+
+    // Check if API key is configured
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+      return {
+        success: false,
+        error: {
+          type: 'API_KEY_INVALID',
+          message: 'Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file.',
+        },
+      };
+    }
+
+    try {
+      const geminiService = new GeminiService(apiKey, model, imageModel);
+      return await geminiService.generateCircuitImage(description);
+    } catch (error) {
+      if (this.isGeminiAPIError(error)) {
+        return {
+          success: false,
+          error: error,
+        };
+      }
+
+      return {
+        success: false,
+        error: {
+          type: 'UNKNOWN',
+          message: 'An unexpected error occurred while generating the circuit image.',
+          details: error instanceof Error ? error.message : String(error),
+        },
+      };
+    }
+  }
+
+  /**
+   * Generate circuit with both JSON data and AI-generated image
+   * This combines circuit generation with image generation for full AI experience
+   */
+  static async generateCircuitWithImage(
+    description: string,
+    componentLibrary: ComponentDefinition[]
+  ): Promise<CircuitGenerationResultWithImage> {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const model = import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash';
+    const imageModel = import.meta.env.VITE_GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-preview-0520';
+
+    // Check if API key is configured
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+      return {
+        success: false,
+        template: null,
+        patternUsed: 'None',
+        confidence: 0,
+        suggestions: [],
+        error: {
+          type: 'API_KEY_INVALID',
+          message: 'Gemini API key not configured. Please add VITE_GEMINI_API_KEY to your .env file.',
+        },
+      };
+    }
+
+    try {
+      const geminiService = new GeminiService(apiKey, model, imageModel);
+
+      // Generate both circuit JSON and image in parallel
+      const [circuitResponse, imageResponse] = await Promise.all([
+        geminiService.generateCircuit(description, componentLibrary),
+        geminiService.generateCircuitImage(description),
+      ]);
+
+      // Convert Gemini response to CircuitTemplate
+      const template = this.convertGeminiResponseToTemplate(circuitResponse, componentLibrary);
+
+      return {
+        success: true,
+        template,
+        patternUsed: 'Gemini AI + Image',
+        confidence: 1.0,
+        suggestions: [],
+        reasoning: circuitResponse.reasoning,
+        // Include AI-generated image data
+        diagramImage: imageResponse.success ? imageResponse.imageDataUrl : undefined,
+        imageDescription: imageResponse.description,
+        imageError: imageResponse.error,
+      };
+    } catch (error) {
+      // Handle GeminiAPIError
+      if (this.isGeminiAPIError(error)) {
+        return {
+          success: false,
+          template: null,
+          patternUsed: 'None',
+          confidence: 0,
+          suggestions: [],
+          error: error,
+        };
+      }
+
+      // Handle unknown errors
+      return {
+        success: false,
+        template: null,
+        patternUsed: 'None',
+        confidence: 0,
+        suggestions: [],
+        error: {
+          type: 'UNKNOWN',
+          message: 'An unexpected error occurred.',
+          details: error instanceof Error ? error.message : String(error),
+        },
+      };
+    }
+  }
+
+  /**
+   * Convert Gemini AI response to CircuitTemplate format
+   */
+  private static convertGeminiResponseToTemplate(
+    response: GeminiCircuitResponse,
+    componentLibrary: ComponentDefinition[]
+  ): CircuitTemplate {
+    const components: ComponentSpec[] = response.components.map((comp) => {
+      // If libraryId is provided, try to find the component in the library
+      if (comp.libraryId) {
+        const libComp = componentLibrary.find((c) => c.id === comp.libraryId);
+        if (libComp) {
+          return {
+            id: comp.id,
+            type: libComp.type,
+            label: comp.label,
+            manufacturer: libComp.manufacturer,
+            position: comp.position,
+          };
+        }
+      }
+
+      // Use the type from Gemini response
+      return {
+        id: comp.id,
+        type: comp.type as ComponentType,
+        label: comp.label,
+        position: comp.position,
+      };
+    });
+
+    const connections: ConnectionSpec[] = response.connections.map((conn) => ({
+      from: { componentId: conn.from.componentId, pin: conn.from.pin },
+      to: { componentId: conn.to.componentId, pin: conn.to.pin },
+      wireType: conn.wireType as WireType,
+      label: conn.label,
+    }));
+
+    // Handle new components created by AI
+    if (response.newComponents && response.newComponents.length > 0) {
+      for (const newComp of response.newComponents) {
+        // Create temporary component definition and add to library if needed
+        const tempDef = this.createTemporaryComponentDefinition(newComp);
+        // Store it in a way the UI can access (for now, just use the component spec)
+        console.log('AI created new component:', tempDef);
+      }
+    }
+
+    return {
+      description: response.description,
+      components,
+      connections,
+    };
+  }
+
+  /**
+   * Create a temporary ComponentDefinition from AI-generated new component
+   */
+  private static createTemporaryComponentDefinition(newComp: any): ComponentDefinition {
+    return {
+      id: `ai-generated-${newComp.id}`,
+      type: newComp.type as ComponentType,
+      manufacturer: newComp.suggestedManufacturer || 'AI Generated',
+      modelNumber: newComp.suggestedModelNumber || 'N/A',
+      displayName: newComp.label,
+      description: 'Component created by AI (not from library)',
+      logicalPins: (newComp.pinDefinitions || []).map((pin: any, idx: number) => ({
+        id: `ai-generated-${newComp.id}_${pin.label}`,
+        label: pin.label,
+        type: pin.type as PinType,
+        componentId: `ai-generated-${newComp.id}`,
+        relativePosition: pin.relativePosition || { x: 0, y: idx * 0.2 },
+      })),
+      dimensions: {
+        width: 45,
+        height: 85,
+        depth: 70,
+        dinRailModules: 2,
+      },
+      mounting: {
+        isDinRailMountable: true,
+        orientation: 'vertical',
+      },
+      color: '#9ca3af',
+      ratings: newComp.ratings,
+    };
+  }
+
+  /**
+   * Type guard for GeminiAPIError
+   */
+  private static isGeminiAPIError(error: unknown): error is GeminiAPIError {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      'type' in error &&
+      'message' in error
+    );
+  }
+
+  /**
+   * Legacy method: Generate circuit from natural language description using pattern matching
+   * @deprecated Use generateFromDescriptionWithAI for real AI generation
    */
   static generateFromDescription(description: string): CircuitGenerationResult {
     const normalizedDesc = description.toLowerCase().trim();
@@ -491,4 +792,12 @@ export interface CircuitGenerationResult {
   patternUsed: string;
   confidence: number;
   suggestions: string[];
+  error?: GeminiAPIError;
+  reasoning?: string;
+}
+
+export interface CircuitGenerationResultWithImage extends CircuitGenerationResult {
+  diagramImage?: string; // Base64 data URL of AI-generated circuit diagram
+  imageDescription?: string; // AI's description of the generated image
+  imageError?: GeminiAPIError; // Error if image generation failed (circuit JSON may still succeed)
 }

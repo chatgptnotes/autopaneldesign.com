@@ -1,17 +1,19 @@
 /**
  * AI Prompt Panel: Natural language interface for circuit generation
- * Allows users to describe circuits in plain English and generate diagrams automatically
+ * Uses Google Gemini AI to generate real electrical circuit diagrams from descriptions
  */
 
 import React, { useState } from 'react';
-import { AICircuitGenerator, CircuitGenerationResult } from '../ai/CircuitGenerator';
+import { AICircuitGenerator, CircuitGenerationResultWithImage } from '../ai/CircuitGenerator';
 import { useStore } from '../store';
 import ExportPDFButton from './ExportPDFButton';
+import { GeminiAPIError } from '../types';
 
 const AIPromptPanel: React.FC = () => {
   const [prompt, setPrompt] = useState('');
-  const [result, setResult] = useState<CircuitGenerationResult | null>(null);
+  const [result, setResult] = useState<CircuitGenerationResultWithImage | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<GeminiAPIError | null>(null);
 
   const { addComponent, addConnection, componentLibrary } = useStore();
 
@@ -24,22 +26,38 @@ const AIPromptPanel: React.FC = () => {
     'Design an automatic pump control with water level sensors',
   ];
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!prompt.trim()) return;
 
     setIsGenerating(true);
+    setError(null);
+    setResult(null);
 
-    // Simulate processing time for better UX
-    setTimeout(() => {
-      const generationResult = AICircuitGenerator.generateFromDescription(prompt);
+    try {
+      // Use Gemini AI for circuit generation WITH image generation
+      const generationResult = await AICircuitGenerator.generateCircuitWithImage(
+        prompt,
+        componentLibrary
+      );
+
       setResult(generationResult);
-      setIsGenerating(false);
 
-      // If successful, apply the circuit
-      if (generationResult.success && generationResult.template) {
+      // Check for errors in the result
+      if (generationResult.error) {
+        setError(generationResult.error);
+      } else if (generationResult.success && generationResult.template) {
+        // If successful, apply the circuit
         applyCircuitTemplate(generationResult.template);
       }
-    }, 1000);
+    } catch (err) {
+      setError({
+        type: 'UNKNOWN',
+        message: 'An unexpected error occurred',
+        details: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const applyCircuitTemplate = (template: any) => {
@@ -127,12 +145,12 @@ const AIPromptPanel: React.FC = () => {
           {isGenerating ? (
             <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>Generating...</span>
+              <span>AI is designing...</span>
             </>
           ) : (
             <>
               <span className="material-icons text-sm">auto_fix_high</span>
-              <span>Generate Circuit</span>
+              <span>Generate with AI</span>
             </>
           )}
         </button>
@@ -141,6 +159,7 @@ const AIPromptPanel: React.FC = () => {
           onClick={() => {
             setPrompt('');
             setResult(null);
+            setError(null);
           }}
           className="px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition-colors"
         >
@@ -164,8 +183,45 @@ const AIPromptPanel: React.FC = () => {
         </div>
       </div>
 
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <span className="material-icons text-red-600 mt-0.5">error</span>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-red-800 mb-1">
+                {error.type === 'API_KEY_INVALID' && 'API Key Error'}
+                {error.type === 'RATE_LIMIT' && 'Rate Limit Exceeded'}
+                {error.type === 'NETWORK_ERROR' && 'Network Error'}
+                {error.type === 'PARSE_ERROR' && 'AI Response Error'}
+                {error.type === 'UNKNOWN' && 'Unexpected Error'}
+              </p>
+              <p className="text-sm text-red-700">{error.message}</p>
+              {error.details && (
+                <p className="text-xs text-red-600 mt-2 font-mono bg-red-100 p-2 rounded">
+                  {error.details}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Processing Indicator */}
+      {isGenerating && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <div>
+              <p className="text-sm font-medium text-blue-800">AI is designing your circuit...</p>
+              <p className="text-xs text-blue-600">Using Google Gemini to analyze your requirements</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Generation Result */}
-      {result && (
+      {result && !error && (
         <div className="border-t border-gray-200 pt-6">
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
@@ -184,12 +240,18 @@ const AIPromptPanel: React.FC = () => {
                       Circuit Generated Successfully!
                     </p>
                     <p className="text-sm text-green-700">
-                      Pattern Used: <span className="font-semibold">{result.patternUsed}</span>
+                      Generated by: <span className="font-semibold">{result.patternUsed}</span>
                     </p>
                     {result.template && (
                       <p className="text-sm text-green-700 mt-2">
                         {result.template.description}
                       </p>
+                    )}
+                    {result.reasoning && (
+                      <div className="mt-3 pt-3 border-t border-green-200">
+                        <p className="text-xs font-medium text-green-800 mb-1">AI Reasoning:</p>
+                        <p className="text-xs text-green-700">{result.reasoning}</p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -245,13 +307,53 @@ const AIPromptPanel: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* AI-Generated Diagram Preview */}
+          {result.success && result.diagramImage && (
+            <div className="mt-6">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                AI-Generated Circuit Diagram:
+              </h4>
+              <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+                <img
+                  src={result.diagramImage}
+                  alt="AI-Generated Circuit Diagram"
+                  className="w-full h-auto"
+                />
+              </div>
+              {result.imageDescription && (
+                <p className="text-xs text-gray-500 mt-2 italic">
+                  {result.imageDescription}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Image Generation Error (if circuit succeeded but image failed) */}
+          {result.success && result.imageError && (
+            <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p className="text-sm text-yellow-700">
+                <span className="font-medium">Note:</span> Circuit generated successfully, but image generation failed.
+                The PDF will use the standard schematic renderer.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
       {/* PDF Export Section */}
       <div className="mt-6 border-t border-gray-200 pt-6">
         <h4 className="text-sm font-semibold text-gray-700 mb-4">Export Professional Documentation:</h4>
-        <ExportPDFButton />
+        <ExportPDFButton
+          aiTemplate={result?.success ? result.template : null}
+          aiGeneratedImage={result?.success ? result.diagramImage : undefined}
+          aiConfig={{
+            voltage: '400V AC',
+            phases: 3,
+            frequency: '50Hz',
+            projectName: 'AI Generated Circuit',
+          }}
+        />
       </div>
 
       {/* Help Section */}
